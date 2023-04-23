@@ -12,6 +12,8 @@ destination_dir = r"D:\Merged_Documents"
 script_directory = os.path.dirname(os.path.abspath(__file__))
 seen_files_path = os.path.join(script_directory, 'seen_files.json')
 
+ignored_formats = ['.mp4', '.avi', '.mkv', '.mov', '.wmv']
+
 def md5_checksum(file_path):
     with open(file_path, 'rb') as file:
         md5_hash = hashlib.md5()
@@ -23,10 +25,11 @@ def get_seen_files(dest_dir):
     seen_files = []
     for root, _, files in os.walk(dest_dir):
         for file in files:
-            file_path = os.path.join(root, file)
-            file_checksum = md5_checksum(file_path)
-            seen_files.append(file_checksum)
-            print(f"Seen file: {file_path}, Checksum: {file_checksum}")
+            if not any(file.lower().endswith(ext) for ext in ignored_formats):
+                file_path = os.path.join(root, file)
+                file_checksum = md5_checksum(file_path)
+                seen_files.append(file_checksum)
+                print(f"Seen file: {file_path}, Checksum: {file_checksum}")
     return seen_files
 
 def save_seen_files(seen_files, file_path):
@@ -47,32 +50,33 @@ def merge_directories(src_dirs, dest_dir):
         print(f"Processing source directory: {src_dir}")
         for root, _, files in os.walk(src_dir):
             for file in files:
-                file_path = os.path.join(root, file)
-                file_checksum = md5_checksum(file_path)
-                rel_path = os.path.relpath(root, src_dir)
-                dest_subdir = os.path.join(dest_dir, rel_path)
+                if not any(file.lower().endswith(ext) for ext in ignored_formats):
+                    file_path = os.path.join(root, file)
+                    file_checksum = md5_checksum(file_path)
+                    rel_path = os.path.relpath(root, src_dir)
+                    dest_subdir = os.path.join(dest_dir, rel_path)
 
-                if not os.path.exists(dest_subdir):
-                    os.makedirs(dest_subdir)
+                    if not os.path.exists(dest_subdir):
+                        os.makedirs(dest_subdir)
 
-                dest_file_path = os.path.join(dest_subdir, file)
+                    dest_file_path = os.path.join(dest_subdir, file)
 
-                if file_checksum not in seen_files:
-                    if os.path.exists(dest_file_path):
-                        dest_checksum = md5_checksum(dest_file_path)
-                        if dest_checksum != file_checksum:
-                            i = 1
-                            while True:
-                                file_name, file_ext = os.path.splitext(file)
-                                new_file_name = f"{file_name}_{i}{file_ext}"
-                                dest_file_path = os.path.join(dest_subdir, new_file_name)
-                                if not os.path.exists(dest_file_path):
-                                    break
-                                i += 1
-                    shutil.copy(file_path, dest_file_path)
-                    print(f"Copied {file_path} to {dest_file_path}")
-                else:
-                    print(f"Skipped duplicate: {file_path}")
+                    if file_checksum not in seen_files:
+                        if os.path.exists(dest_file_path):
+                            dest_checksum = md5_checksum(dest_file_path)
+                            if dest_checksum != file_checksum:
+                                i = 1
+                                while True:
+                                    file_name, file_ext = os.path.splitext(file)
+                                    new_file_name = f"{file_name}_{i}{file_ext}"
+                                    dest_file_path = os.path.join(dest_subdir, new_file_name)
+                                    if not os.path.exists(dest_file_path):
+                                        break
+                                    i += 1
+                        shutil.copy(file_path, dest_file_path)
+                        print(f"Copied {file_path} to {dest_file_path}")
+                    else:
+                        print(f"Skipped duplicate: {file_path}")
 
         print(f"Finished processing source directory: {src_dir}\n")
 
