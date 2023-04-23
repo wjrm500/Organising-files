@@ -3,14 +3,14 @@ import os
 import hashlib
 
 source_dirs = [
-    r"D:\Documents copied from laptop 02.04.2022",
-    r"D:\Documents",
-    r"D:\2019-11-17 File Deposit (docs)",
-    r"D:\2019-11-17 File Deposit (everything except docs)"
+    # r"D:\Documents copied from laptop 02.04.2022",
+    # r"D:\Documents",
+    # r"D:\2019-11-17 File Deposit (docs)",
+    r"D:\2019-11-17 File Deposit (everything except docs)",
     r"D:\EVERY DOCUMENT copied from laptop 29.01.17",
-    r"D:\EVERY DOCUMENT copied from laptop 12.01.17",
-    r"D:\Documents copied from laptop 09.01.16",
-    r"D:\Documents copied from laptop 11.05.16",
+    # r"D:\EVERY DOCUMENT copied from laptop 12.01.17",
+    # r"D:\Documents copied from laptop 09.01.16",
+    # r"D:\Documents copied from laptop 11.05.16",
 ]
 
 destination_dir = r"D:\Merged_Documents"
@@ -39,14 +39,29 @@ def save_dest_checksums(dest_checksums):
         json.dump(dest_checksums, outfile)
     print(f"Saved dest_checksums to {dest_checksums_path}")
 
+def load_dest_checksums():
+    dest_checksums_path = os.path.join(script_directory, 'dest_checksums.json')
+    if os.path.exists(dest_checksums_path):
+        with open(dest_checksums_path, 'r') as infile:
+            dest_checksums = json.load(infile)
+        print(f"Loaded dest_checksums from {dest_checksums_path}")
+        return dest_checksums
+    else:
+        print(f"No dest_checksums available at {dest_checksums_path}")
+        return None
+
 def ensure_all_files_present(src_dirs, dest_dir):
-    dest_checksums = get_file_checksums(dest_dir)
-    save_dest_checksums(dest_checksums)
+    dest_checksums = load_dest_checksums()
+    if dest_checksums is None:
+        dest_checksums = get_file_checksums(dest_dir)
+        save_dest_checksums(dest_checksums)
+
     missing_files = []
 
     file_count = {}
 
     for src_dir in src_dirs:
+        print(f"Checking for missing files from '{src_dir}'...")
         src_checksums = get_file_checksums(src_dir)
         file_count[src_dir] = {"present": 0, "missing": 0}  # create keys if not present
         for file_path, file_checksum in src_checksums.items():
