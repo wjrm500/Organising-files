@@ -15,6 +15,12 @@ def analyze_files(dest_dir):
     file_checksums = {}
     file_sizes = {}
 
+    total_files = 0
+    processed_files = 0
+
+    for root, _, files in os.walk(dest_dir):
+        total_files += len(files)
+
     for root, _, files in os.walk(dest_dir):
         for file in files:
             file_path = os.path.join(root, file)
@@ -27,6 +33,9 @@ def analyze_files(dest_dir):
                 file_checksums[file_checksum].append(file_path)
 
             file_sizes[file_path] = file_size
+
+            processed_files += 1
+            print(f"Processed {processed_files}/{total_files}: {file_path}")
 
     return file_checksums, file_sizes
 
